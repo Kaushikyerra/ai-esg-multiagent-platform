@@ -1,0 +1,5 @@
+{
+  "pipeline_config": "name: Sample Pipeline\n\non:\n  push:\n    branches: [main]\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v3\n      - name: Build\n        run: npm run build\n  \n  test:\n    runs-on: ubuntu-latest\n    needs: build\n    steps:\n      - name: Run tests\n        run: npm test\n  \n  deploy:\n    runs-on: ubuntu-latest\n    needs: [build, test]\n    steps:\n      - name: Deploy\n        run: echo 'Deploying...'",
+  "pipeline_type": "github_actions",
+  "region": "azure_eastus"
+}
