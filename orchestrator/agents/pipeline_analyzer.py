@@ -1,6 +1,6 @@
 from typing import Dict, Any
 import yaml
-from .base_agent import BaseAgent
+from agents.base_agent import BaseAgent
 
 class PipelineAnalyzerAgent(BaseAgent):
     """Analyzes CI/CD pipeline configurations"""

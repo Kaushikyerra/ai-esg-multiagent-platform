@@ -1,9 +1,16 @@
 import asyncio
 import logging
+import sys
+from pathlib import Path
+
+# Add orchestrator directory to path
+sys.path.insert(0, str(Path(__file__).parent))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+
 from agents.pipeline_analyzer import PipelineAnalyzerAgent
 from agents.carbon_estimator import CarbonEstimatorAgent
 from agents.cost_calculator import CostCalculatorAgent

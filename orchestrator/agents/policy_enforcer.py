@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from .base_agent import BaseAgent
+from agents.base_agent import BaseAgent
 
 class PolicyEnforcerAgent(BaseAgent):
     """Enforces governance policies"""
