@@ -46,43 +46,52 @@ Pipeline Config → Orchestrator → [6 Parallel Agents] → Policy Decision
 5. **Policy Enforcer**: Validates against governance rules
 6. **Report Generator**: Creates executive-ready compliance reports
 
-### Tech Stack
-- **AI Platform**: Azure OpenAI (GPT-4), Semantic Kernel
+### Tech Stack (ONLY Microsoft Tools)
+- **AI Platform**: Microsoft Agent Framework, Azure OpenAI (GPT-4)
 - **Backend**: Python 3.11+, FastAPI
 - **Cloud**: Azure Container Apps, Azure Container Registry
-- **CI/CD**: GitHub Actions, Azure DevOps integration
-- **Infrastructure**: Bicep templates
+- **CI/CD**: GitHub Actions (Microsoft-owned)
+- **Infrastructure**: Azure Bicep templates
 
-## 🚀 Quick Start
+**Hackathon Compliance**: Uses ONLY Microsoft tools as required by AI Dev Days Hackathon 2026
 
-### Option 1: Automated Setup (Recommended)
+## 🚀 Quick Start with Microsoft Agent Framework
+
+### Step 1: Install Microsoft Agent Framework
 ```bash
-# Windows
-quickstart.bat
+cd ai-esg-multiagent-platform
+venv\Scripts\activate
 
-# Linux/Mac
-chmod +x quickstart.sh
-./quickstart.sh
+# Run setup script
+setup_maf.bat
+
+# Or manually
+pip install agent-framework --pre
+pip install azure-ai-openai azure-identity
+pip install -r requirements.txt
 ```
 
-### Option 2: Manual Setup
+### Step 2: Configure Azure OpenAI
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# Edit .env file with your Azure OpenAI credentials
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your_key
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+```
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env and add your Azure OpenAI credentials
-
-# Run server
-python orchestrator/main.py
+### Step 3: Run & Test
+```bash
+# Start server (Microsoft Agent Framework)
+python orchestrator/main_maf.py
 
 # Test (in another terminal)
 python test_api.py
+```
+
+### Step 4: Daily Git Commit
+```bash
+# Use daily commit script
+daily_commit.bat
 ```
 
 ## 📊 Demo
