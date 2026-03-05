@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from agents.base_agent import BaseAgent
+from .base_agent import BaseAgent
 
 class RiskScorerAgent(BaseAgent):
     """Scores deployment risk"""

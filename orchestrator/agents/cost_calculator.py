@@ -1,6 +1,6 @@
 from typing import Dict, Any
-from agents.base_agent import BaseAgent
-from config import Config
+from .base_agent import BaseAgent
+from ..config import Config
 
 class CostCalculatorAgent(BaseAgent):
     """Calculates deployment costs"""
