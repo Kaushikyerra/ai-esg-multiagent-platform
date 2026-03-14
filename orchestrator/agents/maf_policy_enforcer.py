@@ -85,12 +85,22 @@ Be decisive and provide clear reasoning for all decisions."""
             decision = "APPROVED"
             can_proceed = True
         
+        # Build passed checks list
+        passed = []
+        if co2_kg <= self.policies["warn_carbon_kg"]:
+            passed.append(f"Carbon emissions within limit ({co2_kg} kg ≤ {self.policies['warn_carbon_kg']} kg)")
+        if cost <= self.policies["warn_cost_usd"]:
+            passed.append(f"Cost within limit (${cost} ≤ ${self.policies['warn_cost_usd']})")
+        if risk_score <= self.policies["warn_risk_score"]:
+            passed.append(f"Risk score within limit ({risk_score} ≤ {self.policies['warn_risk_score']})")
+
         return {
             "status": "success",
             "decision": decision,
             "can_proceed": can_proceed,
             "violations": violations,
             "warnings": warnings,
+            "passed": passed,
             "policies_checked": list(self.policies.keys())
         }
     

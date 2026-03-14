@@ -1,5 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
-import { RadialBarChart, RadialBar, ResponsiveContainer, Legend } from 'recharts'
+import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts'
 
 interface Props {
   data: {
@@ -69,9 +69,7 @@ export default function RiskCard({ data }: Props) {
               endAngle={0}
             >
               <RadialBar
-                minAngle={15}
                 background
-                clockWise
                 dataKey="value"
                 cornerRadius={10}
               />

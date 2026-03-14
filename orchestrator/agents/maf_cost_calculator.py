@@ -70,6 +70,7 @@ Be specific with dollar amounts and percentage savings."""
             "total_cost_usd": round(total_cost, 4),
             "monthly_projection_usd": round(monthly_projection, 2),
             "cost_rating": self._get_cost_rating(total_cost),
+            "optimization_potential": self._get_basic_optimizations(context),
             "basic_optimizations": self._get_basic_optimizations(context)
         }
     

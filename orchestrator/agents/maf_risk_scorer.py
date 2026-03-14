@@ -93,6 +93,7 @@ Focus on practical, actionable recommendations to reduce deployment risk."""
             "risk_score": risk_score,
             "risk_level": self._get_risk_level(risk_score),
             "risk_factors": risk_factors,
+            "recommendations": self._get_basic_recommendations(risk_factors),
             "basic_recommendations": self._get_basic_recommendations(risk_factors)
         }
     

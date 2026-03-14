@@ -21,6 +21,7 @@ export default function SummaryCard({ summary }: Props) {
           icon: <CheckCircle className="w-8 h-8 text-green-600" />
         }
       case 'APPROVED_WITH_WARNINGS':
+      case 'WARNING':
         return {
           bg: 'bg-yellow-50',
           border: 'border-yellow-200',
