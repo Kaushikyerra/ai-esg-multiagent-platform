@@ -10,67 +10,64 @@ interface Props {
   }
 }
 
-const config = {
+const cfg = {
   APPROVED: {
     icon: CheckCircle2,
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/20',
-    text: 'text-emerald-400',
-    label: 'Approved',
-    desc: 'All checks passed. Pipeline is cleared to proceed.',
+    bg: 'bg-emerald-50', border: 'border-emerald-200',
+    text: 'text-emerald-700', sub: 'text-emerald-600',
+    label: 'Pipeline Approved',
+    desc: 'All governance checks passed. Pipeline is cleared to proceed.',
   },
   APPROVED_WITH_WARNINGS: {
     icon: AlertTriangle,
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/20',
-    text: 'text-amber-400',
+    bg: 'bg-amber-50', border: 'border-amber-200',
+    text: 'text-amber-700', sub: 'text-amber-600',
     label: 'Approved with Warnings',
     desc: 'Pipeline can proceed but review the warnings below.',
   },
   BLOCKED: {
     icon: XCircle,
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/20',
-    text: 'text-red-400',
-    label: 'Blocked',
-    desc: 'Pipeline has critical violations and cannot proceed.',
+    bg: 'bg-red-50', border: 'border-red-200',
+    text: 'text-red-700', sub: 'text-red-600',
+    label: 'Pipeline Blocked',
+    desc: 'Critical violations detected. Pipeline cannot proceed.',
   },
 }
 
 const ratingColor = (r: string) =>
-  ({ A: 'text-emerald-400', B: 'text-teal-400', C: 'text-amber-400', D: 'text-orange-400', F: 'text-red-400' }[r] ?? 'text-slate-400')
+  ({ A: 'text-emerald-600', B: 'text-teal-600', C: 'text-amber-600', D: 'text-orange-600', F: 'text-red-600' }[r] ?? 'text-slate-500')
 
 const riskColor = (r: string) =>
-  ({ LOW: 'text-emerald-400', MEDIUM: 'text-amber-400', HIGH: 'text-orange-400', CRITICAL: 'text-red-400' }[r] ?? 'text-slate-400')
+  ({ LOW: 'text-emerald-600', MEDIUM: 'text-amber-600', HIGH: 'text-orange-600', CRITICAL: 'text-red-600' }[r] ?? 'text-slate-500')
 
 export default function DecisionBanner({ summary }: Props) {
-  const c = config[summary.decision as keyof typeof config] ?? config.APPROVED
+  const c = cfg[summary.decision as keyof typeof cfg] ?? cfg.APPROVED
   const Icon = c.icon
 
   return (
-    <div className={`${c.bg} ${c.border} border rounded-xl px-5 py-4 flex items-center justify-between`}>
+    <div className={`${c.bg} ${c.border} border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4`}>
       <div className="flex items-center gap-3">
-        <Icon className={`w-5 h-5 ${c.text} flex-shrink-0`} />
+        <Icon className={`w-6 h-6 ${c.text} flex-shrink-0`} />
         <div>
-          <div className={`font-semibold ${c.text}`}>{c.label}</div>
-          <div className="text-slate-400 text-sm">{c.desc}</div>
+          <div className={`font-semibold text-base ${c.text}`}>{c.label}</div>
+          <div className={`text-sm ${c.sub}`}>{c.desc}</div>
         </div>
       </div>
 
-      <div className="flex items-center gap-6 text-sm">
+      <div className="flex items-center gap-6 text-sm flex-shrink-0">
         <div className="text-center">
-          <div className={`text-xl font-bold ${ratingColor(summary.carbon_rating)}`}>{summary.carbon_rating}</div>
-          <div className="text-slate-500 text-xs mt-0.5">Carbon</div>
+          <div className={`text-2xl font-extrabold ${ratingColor(summary.carbon_rating)}`}>{summary.carbon_rating}</div>
+          <div className="text-slate-400 text-xs mt-0.5">Carbon</div>
         </div>
-        <div className="w-px h-8 bg-white/10" />
+        <div className="w-px h-8 bg-slate-200" />
         <div className="text-center">
-          <div className={`text-xl font-bold ${ratingColor(summary.cost_rating)}`}>{summary.cost_rating}</div>
-          <div className="text-slate-500 text-xs mt-0.5">Cost</div>
+          <div className={`text-2xl font-extrabold ${ratingColor(summary.cost_rating)}`}>{summary.cost_rating}</div>
+          <div className="text-slate-400 text-xs mt-0.5">Cost</div>
         </div>
-        <div className="w-px h-8 bg-white/10" />
+        <div className="w-px h-8 bg-slate-200" />
         <div className="text-center">
-          <div className={`text-xl font-bold ${riskColor(summary.risk_level)}`}>{summary.risk_level}</div>
-          <div className="text-slate-500 text-xs mt-0.5">Risk</div>
+          <div className={`text-2xl font-extrabold ${riskColor(summary.risk_level)}`}>{summary.risk_level}</div>
+          <div className="text-slate-400 text-xs mt-0.5">Risk</div>
         </div>
       </div>
     </div>
