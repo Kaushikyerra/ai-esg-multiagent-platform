@@ -104,7 +104,7 @@ pytest tests/test_agents.py::test_pipeline_analyzer -v
 - [ ] Setup monitoring
 
 ### Enhancement Tasks (If Time Permits)
-- [ ] Add Azure Monitor integration
+- [ ] Add Azure Monitor integrationko
 - [ ] Setup Application Insights
 - [ ] Configure auto-scaling
 - [ ] Add health checks and alerts

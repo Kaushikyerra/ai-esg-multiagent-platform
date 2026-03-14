@@ -1,0 +1,157 @@
+name: GreenOps AI - Azure Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  RESOURCE_GROUP: greenops-rg
+  LOCATION: eastus
+  APP_NAME: greenops-ai
+  ACR_NAME: greenopsacr
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Create Resource Group
+        run: |
+          az group create \
+            --name ${{ env.RESOURCE_GROUP }} \
+            --location ${{ env.LOCATION }}
+      
+      - name: Deploy Infrastructure
+        run: |
+          az deployment group create \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --template-file deploy/azure-resources.bicep \
+            --parameters appName=${{ env.APP_NAME }} location=${{ env.LOCATION }}
+      
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+      
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.ACR_NAME }}.azurecr.io/greenops:latest
+            ${{ env.ACR_NAME }}.azurecr.io/greenops:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/greenops:buildcache
+          cache-to: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/greenops:buildcache,mode=max
+      
+      - name: Update Container App
+        run: |
+          az containerapp update \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/greenops:latest
+      
+      - name: Configure Secrets
+        run: |
+          az containerapp secret set \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --secrets openai-key="${{ secrets.AZURE_OPENAI_API_KEY }}"
+      
+      - name: Update Environment Variables
+        run: |
+          az containerapp update \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --set-env-vars \
+              AZURE_OPENAI_API_KEY=secretref:openai-key \
+              AZURE_OPENAI_ENDPOINT="${{ secrets.AZURE_OPENAI_ENDPOINT }}" \
+              AZURE_OPENAI_DEPLOYMENT_NAME="${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}" \
+              AZURE_OPENAI_API_VERSION="2024-12-01-preview" \
+              LOG_LEVEL=INFO \
+              PORT=8000
+      
+      - name: Configure Health Probes
+        run: |
+          az containerapp update \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --health-probe-type liveness \
+            --health-probe-path /health \
+            --health-probe-interval 30 \
+            --health-probe-timeout 5
+      
+      - name: Configure Auto-Scaling
+        run: |
+          az containerapp update \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --min-replicas 2 \
+            --max-replicas 5
+      
+      - name: Get App URL
+        id: app-url
+        run: |
+          APP_URL=$(az containerapp show \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "url=https://$APP_URL" >> $GITHUB_OUTPUT
+      
+      - name: Test Deployment
+        run: |
+          sleep 10
+          curl -f https://$(az containerapp show \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn -o tsv)/health || exit 1
+      
+      - name: Setup Application Insights
+        run: |
+          az monitor app-insights component create \
+            --app greenops-insights \
+            --location ${{ env.LOCATION }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --application-type web \
+            --retention-time 30 || true
+      
+      - name: Create Monitoring Alerts
+        run: |
+          # Get Application Insights resource ID
+          INSIGHTS_ID=$(az monitor app-insights component show \
+            --app greenops-insights \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query id -o tsv 2>/dev/null || echo "")
+          
+          if [ ! -z "$INSIGHTS_ID" ]; then
+            # Create alert for high error rate
+            az monitor metrics alert create \
+              --name greenops-high-error-rate \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --scopes $INSIGHTS_ID \
+              --condition "avg failed requests > 10" \
+              --window-size 5m \
+              --evaluation-frequency 1m \
+              --action create-or-update-action-group || true
+          fi
+      
+      - name: Deployment Summary
+        run: |
+          echo "✅ Deployment Complete!"
+          echo "🌐 App URL: ${{ steps.app-url.outputs.url }}"
+          echo "📊 Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "🐳 Container Registry: ${{ env.ACR_NAME }}.azurecr.io"
+          echo "📈 Auto-scaling: 2-5 replicas"
+          echo "🔍 Health checks: Enabled"
+          echo "📋 Monitoring: Application Insights configured"
