@@ -1,10 +1,10 @@
-import { Shield, CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck } from 'lucide-react'
 
 interface Props {
   data: {
     decision: string
-    violations: any[]
-    warnings: any[]
+    violations: string[]
+    warnings: string[]
     passed: string[]
     can_proceed: boolean
   }
@@ -12,24 +12,23 @@ interface Props {
 
 export default function PolicyCard({ data }: Props) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="bg-[#13151f] border border-white/5 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Shield className="w-5 h-5 text-purple-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Policy Enforcement</h3>
+        <ShieldCheck className="w-4 h-4 text-purple-400" />
+        <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Policy Enforcement</span>
       </div>
 
       <div className="space-y-4">
         {data.passed.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-medium text-gray-700">Passed Checks</span>
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium mb-2">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Passed ({data.passed.length})
             </div>
-            <div className="space-y-1">
-              {data.passed.map((check, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 pl-6">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  {check}
+            <div className="space-y-1.5">
+              {data.passed.map((p, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-slate-400 pl-1">
+                  <span className="w-1 h-1 rounded-full bg-emerald-500 flex-shrink-0" />
+                  {p}
                 </div>
               ))}
             </div>
@@ -38,15 +37,14 @@ export default function PolicyCard({ data }: Props) {
 
         {data.warnings.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm font-medium text-gray-700">Warnings</span>
+            <div className="flex items-center gap-1.5 text-xs text-amber-400 font-medium mb-2">
+              <AlertTriangle className="w-3.5 h-3.5" /> Warnings ({data.warnings.length})
             </div>
-            <div className="space-y-1">
-              {data.warnings.map((warning, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 pl-6">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-                  {warning}
+            <div className="space-y-1.5">
+              {data.warnings.map((w, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-slate-400 pl-1">
+                  <span className="w-1 h-1 rounded-full bg-amber-500 flex-shrink-0" />
+                  {typeof w === 'string' ? w : JSON.stringify(w)}
                 </div>
               ))}
             </div>
@@ -55,15 +53,14 @@ export default function PolicyCard({ data }: Props) {
 
         {data.violations.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <XCircle className="w-4 h-4 text-red-600" />
-              <span className="text-sm font-medium text-gray-700">Violations</span>
+            <div className="flex items-center gap-1.5 text-xs text-red-400 font-medium mb-2">
+              <XCircle className="w-3.5 h-3.5" /> Violations ({data.violations.length})
             </div>
-            <div className="space-y-1">
-              {data.violations.map((violation, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 pl-6">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  {violation}
+            <div className="space-y-1.5">
+              {data.violations.map((v, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-slate-400 pl-1">
+                  <span className="w-1 h-1 rounded-full bg-red-500 flex-shrink-0" />
+                  {typeof v === 'string' ? v : JSON.stringify(v)}
                 </div>
               ))}
             </div>
@@ -71,9 +68,7 @@ export default function PolicyCard({ data }: Props) {
         )}
 
         {data.passed.length === 0 && data.warnings.length === 0 && data.violations.length === 0 && (
-          <div className="text-center text-gray-500 py-4">
-            No policy checks configured
-          </div>
+          <p className="text-xs text-slate-500">No policy checks configured.</p>
         )}
       </div>
     </div>

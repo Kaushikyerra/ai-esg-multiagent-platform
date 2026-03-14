@@ -6,39 +6,39 @@ interface Props {
 }
 
 export default function RecommendationsCard({ costOptimizations, riskRecommendations }: Props) {
-  const allRecommendations = [
-    ...costOptimizations.map(r => ({ text: r, type: 'cost' })),
-    ...riskRecommendations.map(r => ({ text: r, type: 'risk' }))
+  const all = [
+    ...costOptimizations.map(t => ({ text: t, type: 'cost' as const })),
+    ...riskRecommendations.map(t => ({ text: t, type: 'risk' as const })),
   ]
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="bg-[#13151f] border border-white/5 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-5 h-5 text-amber-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Recommendations</h3>
+        <Lightbulb className="w-4 h-4 text-amber-400" />
+        <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Recommendations</span>
       </div>
 
-      {allRecommendations.length > 0 ? (
-        <div className="space-y-3">
-          {allRecommendations.map((rec, idx) => (
-            <div key={idx} className="flex gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                rec.type === 'cost' ? 'bg-blue-500' : 'bg-orange-500'
-              }`} />
-              <div className="flex-1">
-                <div className="text-sm text-gray-700">{rec.text}</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {rec.type === 'cost' ? 'Cost Optimization' : 'Risk Mitigation'}
-                </div>
+      {all.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-6 text-center">
+          <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center mb-2">
+            <span className="text-emerald-400 text-sm">✓</span>
+          </div>
+          <p className="text-sm text-slate-400">Pipeline is optimized</p>
+          <p className="text-xs text-slate-600 mt-1">No recommendations at this time</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {all.map((r, i) => (
+            <div key={i} className="flex gap-3 p-3 bg-white/[0.02] rounded-lg border border-white/5">
+              <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${r.type === 'cost' ? 'bg-blue-500' : 'bg-orange-500'}`} />
+              <div>
+                <p className="text-xs text-slate-300">{r.text}</p>
+                <p className="text-[10px] text-slate-600 mt-0.5">
+                  {r.type === 'cost' ? 'Cost optimization' : 'Risk mitigation'}
+                </p>
               </div>
             </div>
           ))}
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <div className="text-green-600 text-4xl mb-2">✓</div>
-          <div className="text-gray-600 font-medium">No recommendations</div>
-          <div className="text-sm text-gray-500 mt-1">Your pipeline is optimized!</div>
         </div>
       )}
     </div>

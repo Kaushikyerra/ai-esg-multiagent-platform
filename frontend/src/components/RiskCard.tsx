@@ -1,98 +1,74 @@
-import { AlertTriangle } from 'lucide-react'
-import { RadialBarChart, RadialBar, ResponsiveContainer, Legend } from 'recharts'
-
 interface Props {
   data: {
     risk_score: number
     risk_level: string
-    risk_factors: Array<{
-      factor: string
-      severity: string
-      impact: number
-    }>
+    risk_factors: Array<{ factor: string; severity: string; impact: number }>
   }
 }
 
+const levelColor: Record<string, string> = {
+  LOW:      'text-emerald-400',
+  MEDIUM:   'text-amber-400',
+  HIGH:     'text-orange-400',
+  CRITICAL: 'text-red-400',
+}
+
+const levelBar: Record<string, string> = {
+  LOW:      'bg-emerald-500',
+  MEDIUM:   'bg-amber-500',
+  HIGH:     'bg-orange-500',
+  CRITICAL: 'bg-red-500',
+}
+
+const severityBadge: Record<string, string> = {
+  low:      'bg-emerald-500/10 text-emerald-400',
+  medium:   'bg-amber-500/10 text-amber-400',
+  high:     'bg-orange-500/10 text-orange-400',
+  critical: 'bg-red-500/10 text-red-400',
+}
+
 export default function RiskCard({ data }: Props) {
-  const getRiskColor = () => {
-    if (data.risk_score < 20) return '#10B981'
-    if (data.risk_score < 50) return '#F59E0B'
-    if (data.risk_score < 75) return '#F97316'
-    return '#EF4444'
-  }
-
-  const chartData = [
-    {
-      name: 'Risk Score',
-      value: data.risk_score,
-      fill: getRiskColor()
-    }
-  ]
-
-  const getSeverityColor = (severity: string) => {
-    const colors: Record<string, string> = {
-      'low': 'bg-green-100 text-green-800',
-      'medium': 'bg-yellow-100 text-yellow-800',
-      'high': 'bg-orange-100 text-orange-800',
-      'critical': 'bg-red-100 text-red-800'
-    }
-    return colors[severity] || 'bg-gray-100 text-gray-800'
-  }
+  const color = levelColor[data.risk_level] ?? 'text-slate-400'
+  const bar   = levelBar[data.risk_level]   ?? 'bg-slate-500'
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="bg-[#13151f] border border-white/5 rounded-xl p-5 card-hover">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-orange-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Risk Assessment</h3>
-        </div>
-        <div className={`text-3xl font-bold`} style={{ color: getRiskColor() }}>
+        <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Risk Assessment</span>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded border bg-orange-500/10 text-orange-400 border-orange-500/20`}>
           {data.risk_level}
+        </span>
+      </div>
+
+      <div className="mb-1">
+        <span className={`text-3xl font-bold ${color}`}>{data.risk_score}</span>
+        <span className="text-slate-500 text-sm ml-1">/ 100</span>
+      </div>
+      <p className="text-slate-500 text-xs mb-4">Risk score</p>
+
+      {/* Score bar */}
+      <div className="mb-4">
+        <div className="flex justify-between text-xs text-slate-600 mb-1">
+          <span>Score</span><span>{data.risk_score}%</span>
+        </div>
+        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+          <div className={`h-full ${bar} rounded-full transition-all duration-700`} style={{ width: `${data.risk_score}%` }} />
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <div className="text-3xl font-bold text-gray-900">{data.risk_score}</div>
-          <div className="text-sm text-gray-500">Risk score (0-100)</div>
-        </div>
-
-        <div className="h-40">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart
-              cx="50%"
-              cy="50%"
-              innerRadius="60%"
-              outerRadius="90%"
-              data={chartData}
-              startAngle={180}
-              endAngle={0}
-            >
-              <RadialBar
-                minAngle={15}
-                background
-                clockWise
-                dataKey="value"
-                cornerRadius={10}
-              />
-            </RadialBarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {data.risk_factors.length > 0 && (
-          <div className="pt-4 border-t">
-            <div className="text-sm font-medium text-gray-700 mb-2">Risk Factors</div>
-            <div className="space-y-2">
-              {data.risk_factors.slice(0, 3).map((factor, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 flex-1">{factor.factor}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(factor.severity)}`}>
-                    {factor.severity}
-                  </span>
-                </div>
-              ))}
+      {/* Risk factors */}
+      <div className="space-y-2 pt-3 border-t border-white/5">
+        {data.risk_factors.length === 0 ? (
+          <p className="text-xs text-slate-500">No risk factors detected</p>
+        ) : (
+          data.risk_factors.slice(0, 3).map((f, i) => (
+            <div key={i} className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-slate-400 truncate flex-1">{f.factor}</span>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${severityBadge[f.severity] ?? 'bg-slate-500/10 text-slate-400'}`}>
+                {f.severity}
+              </span>
             </div>
-          </div>
+          ))
         )}
       </div>
     </div>
