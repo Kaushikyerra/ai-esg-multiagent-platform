@@ -1,0 +1,37 @@
+name: GreenOps Blocked Pipeline
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest-16-cores
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build heavy model
+        run: python train_model.py --epochs 100
+      - name: Process large dataset
+        run: python process_data.py --size 100gb
+      - name: Generate reports
+        run: python generate_reports.py
+      - name: Package artifacts
+        run: tar -czf artifacts.tar.gz ./output
+      - name: Upload to storage
+        run: az storage blob upload-batch
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest-16-cores
+    steps:
+      - name: Deploy to all regions
+        run: ./deploy_global.sh
+      - name: Deploy US East
+        run: kubectl apply -f k8s/us-east/
+      - name: Deploy EU West
+        run: kubectl apply -f k8s/eu-west/
+      - name: Deploy Asia Pacific
+        run: kubectl apply -f k8s/asia/
+      - name: Run migrations
+        run: python manage.py migrate
+      - name: Warm up caches
+        run: python warmup.py
+      - name: Notify stakeholders
+        run: python notify.py

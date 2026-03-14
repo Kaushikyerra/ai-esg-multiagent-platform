@@ -109,10 +109,10 @@ Provide a clear, executive-level explanation of this decision in 2-3 sentences."
     def _load_default_policies(self) -> Dict[str, Any]:
         """Load default policy thresholds"""
         return {
-            "max_carbon_kg": 1.0,
-            "warn_carbon_kg": 0.5,
-            "max_cost_usd": 5.0,
-            "warn_cost_usd": 2.0,
-            "max_risk_score": 75,
-            "warn_risk_score": 50
+            "max_carbon_kg": 0.08,      # Block if > 0.08 kg CO2
+            "warn_carbon_kg": 0.01,     # Warn if > 0.01 kg CO2
+            "max_cost_usd": 1.0,        # Block if > $1.00
+            "warn_cost_usd": 0.15,      # Warn if > $0.15
+            "max_risk_score": 35,       # Block if risk > 35
+            "warn_risk_score": 8        # Warn if risk > 8
         }
