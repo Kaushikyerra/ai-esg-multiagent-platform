@@ -8,7 +8,7 @@ param maxReplicas int = 5
 
 // Container Registry
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: '${appName}acr'
+  name: 'greenopsacr'
   location: location
   sku: {
     name: 'Standard'
@@ -205,7 +205,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
 
 // Storage Account for Logs and Backups
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: '${appName}storage'
+  name: 'greenopsstore'
   location: location
   kind: 'StorageV2'
   sku: {
@@ -237,6 +237,7 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
 }
 
 // Alert Rule for High Error Rate
+// Alert Rule for High Error Rate (Simplified)
 resource errorRateAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: '${appName}-high-error-rate'
   location: 'global'
@@ -253,11 +254,12 @@ resource errorRateAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
       'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
       allOf: [
         {
-          name: 'Failed Requests'
-          metricName: 'failedRequests'
+          name: 'Server Response Time'
+          metricName: 'server/responseTime'
           operator: 'GreaterThan'
-          threshold: 10
-          timeAggregation: 'Total'
+          threshold: 2000
+          timeAggregation: 'Average'
+          criterionType: 'StaticThresholdCriterion'
         }
       ]
     }
@@ -291,6 +293,7 @@ resource cpuAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
           operator: 'GreaterThan'
           threshold: 80
           timeAggregation: 'Average'
+          criterionType: 'StaticThresholdCriterion'
         }
       ]
     }

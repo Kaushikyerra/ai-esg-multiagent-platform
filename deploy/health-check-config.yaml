@@ -1,0 +1,101 @@
+# Health Check Configuration for GreenOps AI
+# This file documents the health check and readiness probe configuration
+
+health_checks:
+  liveness_probe:
+    description: "Checks if the container is alive and should be restarted"
+    endpoint: "/health"
+    method: "GET"
+    initial_delay_seconds: 10
+    period_seconds: 30
+    timeout_seconds: 5
+    failure_threshold: 3
+    success_threshold: 1
+    expected_status: 200
+    
+  readiness_probe:
+    description: "Checks if the container is ready to receive traffic"
+    endpoint: "/health"
+    method: "GET"
+    initial_delay_seconds: 5
+    period_seconds: 10
+    timeout_seconds: 3
+    failure_threshold: 2
+    success_threshold: 1
+    expected_status: 200
+
+health_endpoint_response:
+  description: "Expected response from /health endpoint"
+  example:
+    status: "healthy"
+    timestamp: "2024-03-14T10:30:00Z"
+    version: "1.0.0"
+    checks:
+      database: "connected"
+      cache: "available"
+      external_api: "responding"
+
+monitoring:
+  metrics_to_track:
+    - name: "health_check_failures"
+      description: "Number of failed health checks"
+      threshold: 3
+      action: "restart_container"
+    
+    - name: "readiness_check_failures"
+      description: "Number of failed readiness checks"
+      threshold: 2
+      action: "remove_from_load_balancer"
+    
+    - name: "response_time"
+      description: "Health check response time"
+      threshold: "5s"
+      action: "alert"
+
+alerts:
+  - name: "health_check_failing"
+    condition: "health_check_failures > 3"
+    severity: "critical"
+    action: "restart_container"
+  
+  - name: "readiness_check_failing"
+    condition: "readiness_check_failures > 2"
+    severity: "warning"
+    action: "remove_from_load_balancer"
+  
+  - name: "slow_health_response"
+    condition: "health_check_response_time > 5s"
+    severity: "warning"
+    action: "investigate"
+
+testing:
+  local_test:
+    command: "curl -v http://localhost:8000/health"
+    expected_response: "200 OK"
+  
+  azure_test:
+    command: "curl -v https://$(az containerapp show --name greenops-ai --resource-group greenops-rg --query properties.configuration.ingress.fqdn -o tsv)/health"
+    expected_response: "200 OK"
+  
+  load_test:
+    command: "ab -n 1000 -c 10 http://localhost:8000/health"
+    expected_response: "< 5% failure rate"
+
+troubleshooting:
+  health_check_failing:
+    - "Check container logs: az containerapp logs show --name greenops-ai --resource-group greenops-rg"
+    - "Verify API is running: curl http://localhost:8000/health"
+    - "Check resource limits: az containerapp show --name greenops-ai --resource-group greenops-rg --query properties.template.containers[0].resources"
+    - "Verify environment variables are set correctly"
+  
+  readiness_check_failing:
+    - "Check if dependencies are available (database, cache, etc.)"
+    - "Verify network connectivity"
+    - "Check application logs for startup errors"
+    - "Increase initial_delay_seconds if startup is slow"
+  
+  slow_health_response:
+    - "Check CPU usage: az monitor metrics list --resource <resource-id> --metric CpuUsagePercentage"
+    - "Check memory usage: az monitor metrics list --resource <resource-id> --metric MemoryUsagePercentage"
+    - "Check network latency"
+    - "Optimize health check endpoint implementation"
