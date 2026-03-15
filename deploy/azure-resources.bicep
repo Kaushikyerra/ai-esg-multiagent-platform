@@ -245,39 +245,7 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
 // Alert Rule for High Error Rate (Simplified)
 // Simplified monitoring for initial deployment
 
-// Alert Rule for High CPU
-resource cpuAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
-  name: '${appName}-high-cpu'
-  location: 'global'
-  properties: {
-    description: 'Alert when CPU usage is high'
-    severity: 2
-    enabled: true
-    scopes: [
-      containerApp.id
-    ]
-    evaluationFrequency: 'PT1M'
-    windowSize: 'PT5M'
-    criteria: {
-      'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
-      allOf: [
-        {
-          name: 'CPU Percentage'
-          metricName: 'CpuUsagePercentage'
-          operator: 'GreaterThan'
-          threshold: 80
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
-        }
-      ]
-    }
-    actions: [
-      {
-        actionGroupId: actionGroup.id
-      }
-    ]
-  }
-}
+// Simplified monitoring for initial deployment
 
 // Outputs
 output containerAppUrl string = containerApp.properties.configuration.ingress.fqdn
