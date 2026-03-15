@@ -102,7 +102,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       containers: [
         {
           name: 'greenops-api'
-          image: '${acr.properties.loginServer}/greenops:latest'
+          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           resources: {
             cpu: json('0.75')
             memory: '1.5Gi'
