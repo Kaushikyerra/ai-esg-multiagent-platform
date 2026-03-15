@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -83,7 +85,101 @@ function exportCSV(result: AnalysisResult) {
 // ── Main component ───────────────────────────────────────────────────────────
 export default function ChartsSection({ result }: Props) {
   const [tab, setTab] = useState<'overview' | 'carbon' | 'cost' | 'risk'>('overview')
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const chartsRef = useRef<HTMLDivElement>(null)
   const { carbon_analysis: ca, cost_analysis: co, risk_analysis: ra, pipeline_analysis: pa } = result
+
+  const exportPDF = async () => {
+    if (!chartsRef.current) return
+    setPdfLoading(true)
+    try {
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageW = 210, pageH = 297, margin = 10
+
+      // Header
+      pdf.setFillColor(16, 185, 129)
+      pdf.rect(0, 0, pageW, 18, 'F')
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFontSize(14)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text('GreenOps AI — Pipeline Analysis Report', margin, 12)
+      pdf.setFontSize(8)
+      pdf.setFont('helvetica', 'normal')
+      pdf.text(new Date().toLocaleString(), pageW - margin, 12, { align: 'right' })
+
+      // Summary row
+      pdf.setTextColor(30, 41, 59)
+      pdf.setFontSize(9)
+      pdf.setFont('helvetica', 'bold')
+      let y = 26
+      const summary = [
+        { label: 'Decision', value: result.summary.decision },
+        { label: 'Carbon', value: result.summary.carbon_rating },
+        { label: 'Cost', value: result.summary.cost_rating },
+        { label: 'Risk', value: result.summary.risk_level },
+        { label: 'CO₂', value: `${ca.co2_kg.toFixed(3)} kg` },
+        { label: 'Total Cost', value: `$${co.total_cost_usd.toFixed(4)}` },
+      ]
+      const colW = (pageW - margin * 2) / summary.length
+      summary.forEach((s, i) => {
+        const x = margin + i * colW
+        pdf.setFillColor(248, 250, 252)
+        pdf.roundedRect(x, y, colW - 2, 14, 2, 2, 'F')
+        pdf.setFontSize(7)
+        pdf.setFont('helvetica', 'normal')
+        pdf.setTextColor(100, 116, 139)
+        pdf.text(s.label, x + (colW - 2) / 2, y + 5, { align: 'center' })
+        pdf.setFontSize(9)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setTextColor(15, 23, 42)
+        pdf.text(String(s.value), x + (colW - 2) / 2, y + 11, { align: 'center' })
+      })
+      y += 20
+
+      // Capture all 4 tabs
+      const tabs: Array<'overview' | 'carbon' | 'cost' | 'risk'> = ['overview', 'carbon', 'cost', 'risk']
+      const tabLabels = ['Overview', 'Carbon Analysis', 'Cost Analysis', 'Risk Analysis']
+
+      for (let t = 0; t < tabs.length; t++) {
+        // Switch tab
+        const tabBtn = chartsRef.current.querySelector(`[data-tab="${tabs[t]}"]`) as HTMLElement
+        if (tabBtn) tabBtn.click()
+        await new Promise(r => setTimeout(r, 600))
+
+        const canvas = await html2canvas(chartsRef.current, {
+          scale: 1.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+        })
+
+        const imgData = canvas.toDataURL('image/png')
+        const imgW = pageW - margin * 2
+        const imgH = (canvas.height * imgW) / canvas.width
+
+        // Add new page if needed
+        if (t > 0) { pdf.addPage(); y = margin }
+
+        // Tab label
+        pdf.setFontSize(10)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setTextColor(16, 185, 129)
+        pdf.text(tabLabels[t], margin, y + 6)
+        y += 10
+
+        // Fit image on page
+        const maxH = pageH - y - margin
+        const finalH = Math.min(imgH, maxH)
+        const finalW = (finalH / imgH) * imgW
+        pdf.addImage(imgData, 'PNG', margin, y, finalW, finalH)
+        y = margin
+      }
+
+      pdf.save(`greenops-report-${Date.now()}.pdf`)
+    } finally {
+      setPdfLoading(false)
+    }
+  }
 
   // Cost breakdown pie
   const costPie = [
@@ -153,7 +249,7 @@ export default function ChartsSection({ result }: Props) {
   ] as const
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" ref={chartsRef}>
 
       {/* Section header + export + tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -167,13 +263,20 @@ export default function ChartsSection({ result }: Props) {
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
             <Download className="w-3.5 h-3.5" /> JSON
           </button>
+          <button onClick={exportPDF} disabled={pdfLoading}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-emerald-300 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium">
+            {pdfLoading
+              ? <><div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> Generating...</>
+              : <><Download className="w-3.5 h-3.5" /> PDF</>
+            }
+          </button>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+          <button key={t.id} data-tab={t.id} onClick={() => setTab(t.id)}
             className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all
               ${tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
             {t.label}
