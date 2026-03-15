@@ -12,6 +12,7 @@ from agents.maf_carbon_estimator import MAFCarbonEstimatorAgent
 from agents.maf_cost_calculator import MAFCostCalculatorAgent
 from agents.maf_risk_scorer import MAFRiskScorerAgent
 from agents.maf_policy_enforcer import MAFPolicyEnforcerAgent
+from agents.maf_downtime_agent import MAFDowntimeAgent
 
 # ─── Demo Pipeline Configs ────────────────────────────────────────────────────
 
@@ -98,11 +99,12 @@ jobs:
 # ─── Test Runner ──────────────────────────────────────────────────────────────
 
 async def run_full_analysis(pipeline_config: str, region: str = "azure_eastus") -> dict:
-    """Run all 5 agents on a pipeline"""
+    """Run all 6 agents on a pipeline"""
     pipeline_analyzer = MAFPipelineAnalyzerAgent()
     carbon_estimator = MAFCarbonEstimatorAgent()
     cost_calculator = MAFCostCalculatorAgent()
     risk_scorer = MAFRiskScorerAgent()
+    downtime_agent = MAFDowntimeAgent()
     policy_enforcer = MAFPolicyEnforcerAgent()
 
     # Step 1: Pipeline analysis
@@ -121,12 +123,16 @@ async def run_full_analysis(pipeline_config: str, region: str = "azure_eastus") 
         risk_scorer.analyze(context)
     )
 
-    # Step 3: Policy enforcement
+    # Step 3: Downtime prediction
+    downtime_result = await downtime_agent.analyze({**context, **risk_result})
+
+    # Step 4: Policy enforcement
     policy_context = {
         **context,
         "carbon_analysis": carbon_result,
         "cost_analysis": cost_result,
-        "risk_analysis": risk_result
+        "risk_analysis": risk_result,
+        "downtime_analysis": downtime_result
     }
     policy_result = await policy_enforcer.analyze(policy_context)
 
@@ -135,6 +141,7 @@ async def run_full_analysis(pipeline_config: str, region: str = "azure_eastus") 
         "carbon": carbon_result,
         "cost": cost_result,
         "risk": risk_result,
+        "downtime": downtime_result,
         "policy": policy_result
     }
 
@@ -145,6 +152,7 @@ def print_result(scenario_name: str, result: dict, expected_decision: str):
     carbon = result["carbon"]
     cost = result["cost"]
     risk = result["risk"]
+    downtime = result["downtime"]
     pipeline = result["pipeline"]
 
     decision = policy.get("decision", "UNKNOWN")
@@ -164,6 +172,7 @@ def print_result(scenario_name: str, result: dict, expected_decision: str):
     print(f"  Cost            : ${cost.get('total_cost_usd', 0)}  [{cost.get('cost_rating', 'N/A')}]")
     print(f"  Monthly Cost    : ${cost.get('monthly_projection_usd', 0)}")
     print(f"  Risk Score      : {risk.get('risk_score', 0)}/100  [{risk.get('risk_level', 'N/A')}]")
+    print(f"  Downtime Risk   : {downtime.get('downtime_risk_score', 0)}/100  [{downtime.get('downtime_probability', 'N/A')}]")
     print(f"  ─────────────────────────────────────────────────────")
     print(f"  Decision        : {decision}")
     print(f"  Can Proceed     : {policy.get('can_proceed', False)}")

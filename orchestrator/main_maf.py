@@ -29,6 +29,7 @@ from agents.maf_carbon_estimator import MAFCarbonEstimatorAgent
 from agents.maf_cost_calculator import MAFCostCalculatorAgent
 from agents.maf_risk_scorer import MAFRiskScorerAgent
 from agents.maf_policy_enforcer import MAFPolicyEnforcerAgent
+from agents.maf_downtime_agent import MAFDowntimeAgent
 from config import Config
 from database import db
 
@@ -73,6 +74,7 @@ pipeline_analyzer = MAFPipelineAnalyzerAgent()
 carbon_estimator = MAFCarbonEstimatorAgent()
 cost_calculator = MAFCostCalculatorAgent()
 risk_scorer = MAFRiskScorerAgent()
+downtime_agent = MAFDowntimeAgent()
 policy_enforcer = MAFPolicyEnforcerAgent()
 
 logger.info("✅ All Microsoft Agent Framework agents initialized")
@@ -108,6 +110,7 @@ async def health():
             "carbon_estimator": "ready",
             "cost_calculator": "ready",
             "risk_scorer": "ready",
+            "downtime_agent": "ready",
             "policy_enforcer": "ready"
         }
     }
@@ -153,13 +156,19 @@ async def analyze_pipeline(request: PipelineAnalysisRequest):
             carbon_task, cost_task, risk_task
         )
         
-        # Step 3: Enforce policies
-        logger.info("Step 3: Policy Enforcement...")
+        # Step 3: Downtime prediction
+        logger.info("Step 3: Downtime Prediction...")
+        downtime_context = {**context, **risk_result}
+        downtime_result = await downtime_agent.analyze(downtime_context)
+
+        # Step 4: Enforce policies
+        logger.info("Step 4: Policy Enforcement...")
         policy_context = {
             **context,
             "carbon_analysis": carbon_result,
             "cost_analysis": cost_result,
-            "risk_analysis": risk_result
+            "risk_analysis": risk_result,
+            "downtime_analysis": downtime_result
         }
         
         policy_result = await policy_enforcer.analyze(policy_context)
@@ -174,13 +183,16 @@ async def analyze_pipeline(request: PipelineAnalysisRequest):
             "carbon_analysis": carbon_result,
             "cost_analysis": cost_result,
             "risk_analysis": risk_result,
+            "downtime_analysis": downtime_result,
             "policy_decision": policy_result,
             "summary": {
                 "can_proceed": policy_result.get("can_proceed", False),
                 "decision": policy_result.get("decision", "UNKNOWN"),
                 "carbon_rating": carbon_result.get("rating", "N/A"),
                 "cost_rating": cost_result.get("cost_rating", "N/A"),
-                "risk_level": risk_result.get("risk_level", "N/A")
+                "risk_level": risk_result.get("risk_level", "N/A"),
+                "downtime_risk_score": downtime_result.get("downtime_risk_score", 0),
+                "downtime_probability": downtime_result.get("downtime_probability", "N/A")
             }
         }
         
