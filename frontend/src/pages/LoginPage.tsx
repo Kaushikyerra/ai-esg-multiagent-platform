@@ -4,7 +4,7 @@ import { auth } from '../firebase'
 import { Eye, EyeOff, Mail, Lock, User as UserIcon, ArrowRight, Leaf, Zap, ShieldCheck, CheckCircle } from 'lucide-react'
 
 export interface User { name: string; email: string; avatar: string; provider: 'google' | 'email' }
-interface Props { onLogin: (user: User, mode: 'login' | 'signup') => void }
+interface Props { onLogin: (user: User, mode: 'login' | 'signup') => void; onBack?: () => void }
 
 function validateEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) }
 
@@ -30,7 +30,7 @@ const PERKS = [
   { icon: CheckCircle, text: 'Executive-ready reports' },
 ]
 
-export default function LoginPage({ onLogin }: Props) {
+export default function LoginPage({ onLogin, onBack }: Props) {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -207,6 +207,7 @@ export default function LoginPage({ onLogin }: Props) {
     </div>
   )
 }
+
 
 
 

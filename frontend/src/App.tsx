@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import HomePage from './pages/HomePage'
 import AnalyzePage from './pages/AnalyzePage'
 import DashboardPage from './pages/DashboardPage'
@@ -6,7 +6,7 @@ import LoginPage, { User } from './pages/LoginPage'
 import Navbar from './components/Navbar'
 import { AnalysisResult } from './types'
 
-export type Page = 'home' | 'analyze' | 'dashboard'
+export type Page = 'home' | 'analyze' | 'dashboard' | 'login'
 
 export default function App() {
   const [user, setUser]       = useState<User | null>(null)
@@ -15,13 +15,9 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
 
-  const handleLogin = (loggedInUser: User, mode: 'login' | 'signup') => {
+  const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser)
-    if (loggedInUser.provider === 'google' || mode === 'login') {
-      setPage('analyze')
-    } else {
-      setPage('home')
-    }
+    setPage('analyze')
   }
 
   const handleLogout = () => {
@@ -30,8 +26,13 @@ export default function App() {
     setResult(null)
   }
 
-  if (!user) {
-    return <LoginPage onLogin={handleLogin} />
+  // Guard: if unauthenticated user tries to navigate to analyze/dashboard, send to login
+  const handleNavigate = (p: Page) => {
+    if (!user && (p === 'analyze' || p === 'dashboard')) {
+      setPage('login')
+    } else {
+      setPage(p)
+    }
   }
 
   const handleAnalyze = async (config: string, type: string, region: string) => {
@@ -60,13 +61,11 @@ export default function App() {
 
   const handleDownloadReport = () => {
     if (!result) return
-
     const { carbon_analysis: c, cost_analysis: co, risk_analysis: r,
             downtime_analysis: d, policy_decision: p, pipeline_analysis: pa } = result
     const decisionColor = p.can_proceed ? '#10b981' : '#ef4444'
     const downtimeProb  = d?.downtime_probability ?? 0
     const downtimeScore = d?.downtime_risk_score   ?? 0
-
     const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><title>GreenOps AI Report</title>
 <style>
@@ -87,21 +86,18 @@ export default function App() {
 <h1>🌱 GreenOps AI — Pipeline Report</h1>
 <p style="color:#64748b;margin-bottom:10px">Jobs: ${pa.jobs_count} &nbsp;|&nbsp; Steps: ${pa.steps_count} &nbsp;|&nbsp; Est. duration: ${pa.estimated_duration_minutes} min</p>
 <span class="badge">${p.decision}</span>
-
 <div class="section"><h2>Carbon Impact</h2><div class="grid">
   <div class="stat"><div class="stat-label">CO₂ per deployment</div><div class="stat-value">${c.co2_kg.toFixed(4)} kg</div></div>
   <div class="stat"><div class="stat-label">Rating</div><div class="stat-value">${c.rating}</div></div>
   <div class="stat"><div class="stat-label">Power usage</div><div class="stat-value">${c.power_consumption_kwh.toFixed(4)} kWh</div></div>
   <div class="stat"><div class="stat-label">Trees / year</div><div class="stat-value">${c.trees_equivalent_per_year.toFixed(4)}</div></div>
 </div></div>
-
 <div class="section"><h2>Cost Estimate</h2><div class="grid">
-  <div class="stat"><div class="stat-label">Total cost</div><div class="stat-value">$${co.total_cost_usd.toFixed(4)}</div></div>
-  <div class="stat"><div class="stat-label">Monthly projection</div><div class="stat-value">$${co.monthly_projection_usd.toFixed(2)}</div></div>
-  <div class="stat"><div class="stat-label">Compute</div><div class="stat-value">$${co.compute_cost_usd.toFixed(4)}</div></div>
+  <div class="stat"><div class="stat-label">Total cost</div><div class="stat-value">${co.total_cost_usd.toFixed(4)}</div></div>
+  <div class="stat"><div class="stat-label">Monthly projection</div><div class="stat-value">${co.monthly_projection_usd.toFixed(2)}</div></div>
+  <div class="stat"><div class="stat-label">Compute</div><div class="stat-value">${co.compute_cost_usd.toFixed(4)}</div></div>
   <div class="stat"><div class="stat-label">Rating</div><div class="stat-value">${co.cost_rating}</div></div>
 </div></div>
-
 <div class="section"><h2>Risk Assessment</h2><div class="grid">
   <div class="stat"><div class="stat-label">Risk score</div><div class="stat-value">${r.risk_score} / 100</div>
     <div class="bar-wrap"><div class="bar" style="width:${r.risk_score}%;background:#f59e0b"></div></div>
@@ -110,7 +106,6 @@ export default function App() {
 </div>
 ${r.risk_factors.length ? `<ul>${r.risk_factors.map(f => `<li><b>${f.factor}</b> — ${f.severity} (impact: ${f.impact})</li>`).join('')}</ul>` : ''}
 </div>
-
 ${d ? `<div class="section"><h2>Downtime Analysis</h2><div class="grid">
   <div class="stat"><div class="stat-label">Probability</div><div class="stat-value">${downtimeProb}%</div>
     <div class="bar-wrap"><div class="bar" style="width:${downtimeProb}%;background:#ef4444"></div></div>
@@ -119,57 +114,43 @@ ${d ? `<div class="section"><h2>Downtime Analysis</h2><div class="grid">
 </div>
 ${d.preventative_measures?.length ? `<ul>${d.preventative_measures.map(m => `<li>✅ ${m}</li>`).join('')}</ul>` : ''}
 </div>` : ''}
-
 <div class="section"><h2>Policy Decision</h2>
 ${p.passed?.length ? `<ul>${p.passed.map(x => `<li>✅ ${x}</li>`).join('')}</ul>` : ''}
 ${p.warnings?.length ? `<ul>${p.warnings.map(x => `<li>⚠️ ${typeof x === 'object' ? JSON.stringify(x) : x}</li>`).join('')}</ul>` : ''}
 ${p.violations?.length ? `<ul>${p.violations.map(x => `<li>❌ ${typeof x === 'object' ? JSON.stringify(x) : x}</li>`).join('')}</ul>` : ''}
 </div>
-
 ${r.recommendations?.length ? `<div class="section"><h2>Recommendations</h2><ul>${r.recommendations.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
-
 <div class="footer">Generated by GreenOps AI &nbsp;·&nbsp; ${new Date().toLocaleString()}</div>
 </body></html>`
-
     const blob = new Blob([html], { type: 'text/html' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
-    a.href     = url
-    a.download = 'greenops-report.html'
-    a.click()
+    a.href = url; a.download = 'greenops-report.html'; a.click()
     URL.revokeObjectURL(url)
+  }
+
+  if (page === 'login') {
+    return <LoginPage onLogin={handleLogin} onBack={() => setPage('home')} />
   }
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar page={page} onNavigate={setPage} hasResult={!!result} user={user} onLogout={handleLogout} />
+      <Navbar page={page} onNavigate={handleNavigate} hasResult={!!result} user={user} onLogout={handleLogout} />
 
-      {page === 'home' && <HomePage onGetStarted={() => setPage('analyze')} />}
+      {page === 'home' && <HomePage onGetStarted={() => handleNavigate('analyze')} />}
 
       {page === 'analyze' && (
-        <AnalyzePage
-          onAnalyze={handleAnalyze}
-          loading={loading}
-          error={error}
-          onClearError={() => setError(null)}
-        />
+        <AnalyzePage onAnalyze={handleAnalyze} loading={loading} error={error} onClearError={() => setError(null)} />
       )}
 
       {page === 'dashboard' && result && (
-        <DashboardPage
-          result={result}
-          onNewAnalysis={() => setPage('analyze')}
-          onDownloadReport={handleDownloadReport}
-        />
+        <DashboardPage result={result} onNewAnalysis={() => setPage('analyze')} onDownloadReport={handleDownloadReport} />
       )}
 
       {page === 'dashboard' && !result && (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <p className="text-slate-400 text-lg mb-4">No analysis yet.</p>
-          <button onClick={() => setPage('analyze')}
-            className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
-            Run Analysis
-          </button>
+          <button onClick={() => setPage('analyze')} className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">Run Analysis</button>
         </div>
       )}
     </div>
