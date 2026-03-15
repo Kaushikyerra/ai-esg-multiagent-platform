@@ -11,6 +11,7 @@ import asyncio
 import logging
 import sys
 import json
+import uuid
 from pathlib import Path
 from datetime import datetime
 
@@ -29,6 +30,7 @@ from agents.maf_cost_calculator import MAFCostCalculatorAgent
 from agents.maf_risk_scorer import MAFRiskScorerAgent
 from agents.maf_policy_enforcer import MAFPolicyEnforcerAgent
 from config import Config
+from database import db
 
 # Setup logging
 logging.basicConfig(
@@ -86,10 +88,11 @@ async def root():
         "hackathon": "AI Dev Days 2026",
         "status": "operational",
         "ai_enhanced": Config.AZURE_OPENAI_API_KEY is not None,
+        "database": "Azure Table Storage" if db.is_connected else "In-Memory",
         "microsoft_tools": [
             "Microsoft Agent Framework",
-            "Azure OpenAI",
-            "Azure Services"
+            "Azure OpenAI GPT-4o",
+            "Azure Table Storage"
         ]
     }
 
@@ -99,6 +102,7 @@ async def health():
         "status": "healthy",
         "framework": "Microsoft Agent Framework",
         "azure_openai_configured": Config.AZURE_OPENAI_API_KEY is not None,
+        "database": "Azure Table Storage" if db.is_connected else "In-Memory",
         "agents": {
             "pipeline_analyzer": "ready",
             "carbon_estimator": "ready",
@@ -185,9 +189,16 @@ async def analyze_pipeline(request: PipelineAnalysisRequest):
         logger.info(f"✅ AI Enhanced: {report['ai_enhanced']}")
         logger.info("="*60)
         
-        # Store in history
+        # Store in Azure Table Storage
+        analysis_id = str(uuid.uuid4())
+        db.save_analysis(analysis_id, {
+            "pipeline_type": request.pipeline_type,
+            "region": request.region,
+        }, report)
+
+        # Also keep in-memory for fast access
         history_entry = {
-            "id": len(analysis_history) + 1,
+            "id": analysis_id,
             "timestamp": datetime.utcnow().isoformat(),
             "pipeline_type": request.pipeline_type,
             "region": request.region,
@@ -208,8 +219,18 @@ async def analyze_pipeline(request: PipelineAnalysisRequest):
 
 @app.get("/history")
 async def get_history():
-    """Return last 50 analysis results"""
-    return {"history": list(reversed(analysis_history)), "total": len(analysis_history)}
+    """Return analysis history from Azure Table Storage"""
+    db_history = db.get_history(50)
+    if db_history:
+        return {"history": db_history, "total": len(db_history), "source": "Azure Table Storage"}
+    # Fallback to in-memory
+    return {"history": list(reversed(analysis_history)), "total": len(analysis_history), "source": "in-memory"}
+
+
+@app.get("/stats")
+async def get_stats():
+    """Aggregate stats from Azure Table Storage"""
+    return db.get_stats()
 
 
 @app.post("/report", response_class=HTMLResponse)
