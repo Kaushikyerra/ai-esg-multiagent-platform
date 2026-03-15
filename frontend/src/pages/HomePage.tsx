@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { ArrowRight, Leaf, DollarSign, ShieldCheck, Zap, BarChart3, GitBranch,
-  CheckCircle, TrendingDown, Globe, Activity, Cpu, Cloud } from 'lucide-react'
+  CheckCircle, Globe, Activity, Cpu, Cloud } from 'lucide-react'
 
 interface Props { onGetStarted: () => void }
 
@@ -129,7 +129,7 @@ function PipelineFlow() {
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold transition-all duration-500
               ${active === i ? 'scale-125 shadow-lg ring-2 ring-offset-2' : done.includes(i) ? 'opacity-90' : 'opacity-40 scale-90'}`}
               style={{ background: n.color, boxShadow: active === i ? `0 0 20px ${n.color}60` : undefined,
-                ringColor: active === i ? n.color : undefined }}>
+                outline: active === i ? `2px solid ${n.color}` : undefined }}>
               {done.includes(i) ? '✓' : active === i ? <span className="animate-spin-slow">⟳</span> : i + 1}
             </div>
             <span className={`text-[9px] font-semibold transition-all ${active === i ? 'text-slate-800' : 'text-slate-400'}`}>{n.label}</span>
@@ -141,26 +141,6 @@ function PipelineFlow() {
           )}
         </div>
       ))}
-    </div>
-  )
-}
-
-/* ── Marquee ── */
-const MARQUEE_ITEMS = [
-  '🌱 Carbon Footprint Analysis', '💰 Cost Optimization', '🛡️ Risk Scoring',
-  '⚡ Policy Enforcement', '📊 Executive Reports', '🔗 GitHub Actions',
-  '☁️ Azure DevOps', '🌍 Multi-Cloud Support', '🤖 6 AI Agents',
-  '⏱️ <30s Analysis', '📈 Real-time Insights', '🔒 Governance Gates',
-]
-
-function Marquee() {
-  return (
-    <div className="overflow-hidden py-3 bg-emerald-600">
-      <div className="marquee-track flex gap-12 whitespace-nowrap">
-        {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-          <span key={i} className="text-xs font-semibold text-white/90 tracking-wide flex-shrink-0">{item}</span>
-        ))}
-      </div>
     </div>
   )
 }

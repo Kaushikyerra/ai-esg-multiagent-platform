@@ -147,11 +147,10 @@ export default function ChartsSection({ result }: Props) {
         await new Promise(r => setTimeout(r, 600))
 
         const canvas = await html2canvas(chartsRef.current, {
-          scale: 1.5,
           useCORS: true,
           backgroundColor: '#ffffff',
           logging: false,
-        })
+        } as Parameters<typeof html2canvas>[1])
 
         const imgData = canvas.toDataURL('image/png')
         const imgW = pageW - margin * 2
