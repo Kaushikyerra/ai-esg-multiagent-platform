@@ -37,7 +37,7 @@ jobs:
           az deployment group create \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --template-file deploy/azure-resources.bicep \
-            --parameters appName=${{ env.APP_NAME }} location=${{ env.LOCATION }}
+            --parameters appName=${{ env.APP_NAME }} location=${{ env.LOCATION }} openAiKey="${{ secrets.AZURE_OPENAI_API_KEY }}"
       
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -142,7 +142,7 @@ jobs:
               --name greenops-high-error-rate \
               --resource-group ${{ env.RESOURCE_GROUP }} \
               --scopes $INSIGHTS_ID \
-              --condition "avg failed requests > 10" \
+              --condition "avg requests/failed > 10" \
               --window-size 5m \
               --evaluation-frequency 1m \
               --action create-or-update-action-group || true
