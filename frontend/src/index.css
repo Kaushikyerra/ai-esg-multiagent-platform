@@ -68,3 +68,107 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Hero background */
+.hero-bg {
+  background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 40%, #fdf4ff 70%, #f0fdf4 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Dot grid */
+.hero-grid {
+  background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Floating orbs */
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 15px) scale(0.95); }
+}
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-25px, 20px) scale(1.08); }
+  66%       { transform: translate(20px, -15px) scale(0.92); }
+}
+@keyframes orbFloat3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%       { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.orb-1 { animation: orbFloat1 10s ease-in-out infinite; }
+.orb-2 { animation: orbFloat2 13s ease-in-out infinite; }
+.orb-3 { animation: orbFloat3 16s ease-in-out infinite; }
+
+/* Blink cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.animate-blink { animation: blink 0.8s step-end infinite; }
+
+/* Animated gradient text */
+.gradient-text-animated {
+  background: linear-gradient(270deg, #059669, #2563eb, #7c3aed, #059669);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientText 5s ease infinite;
+}
+@keyframes gradientText {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* CTA background */
+.cta-bg {
+  background: linear-gradient(135deg, #065f46 0%, #0f766e 30%, #1d4ed8 70%, #4f46e5 100%);
+  background-size: 300% 300%;
+  animation: gradientShift 10s ease infinite;
+}
+
+/* Marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 28s linear infinite; }
+
+/* Bar fill animation */
+@keyframes barFill {
+  from { width: 0; }
+  to   { width: var(--bar-w); }
+}
+.bar-fill { animation: barFill 1.2s ease forwards; }
+
+/* Slow spin */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spinSlow 1s linear infinite; }
+
+/* Pipeline flow line */
+@keyframes flowLine {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+.pipeline-flow-line { animation: flowLine 0.7s ease forwards; }
+
