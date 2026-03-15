@@ -1,0 +1,34 @@
+name: GreenOps Warning Pipeline
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run tests
+        run: pytest tests/
+
+  deploy-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to staging
+        run: kubectl apply -f k8s/staging/
+      - name: Run smoke tests
+        run: npm run test:smoke
+      - name: Notify team
+        run: echo "Deployed to staging"
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to production
+        run: kubectl apply -f k8s/production/
+      - name: Health check
+        run: curl https://api.greenops.io/health
+      - name: Update monitoring
+        run: npm run monitoring:update

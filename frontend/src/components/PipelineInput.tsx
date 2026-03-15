@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { FileCode, Play } from 'lucide-react'
+import { Play, RotateCcw, ChevronDown } from 'lucide-react'
 
 interface Props {
   onAnalyze: (config: string, type: string, region: string) => void
   loading: boolean
 }
 
-const SAMPLE_PIPELINE = `name: Sample Pipeline
+const SAMPLE = `name: CI/CD Pipeline
 
 on:
   push:
@@ -17,104 +17,159 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Build
-        run: npm run build
-  
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install & Build
+        run: |
+          npm install
+          npm run build
+
   test:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Run tests
+      - name: Run Tests
         run: npm test
-  
+
   deploy:
     runs-on: ubuntu-latest
     needs: [build, test]
+    environment: production
     steps:
-      - name: Deploy
-        run: echo 'Deploying...'`
+      - name: Deploy to Azure
+        run: echo 'Deploying to production...'`
+
+const PIPELINE_TYPES = [
+  { value: 'github_actions', label: 'GitHub Actions' },
+  { value: 'azure_devops',   label: 'Azure DevOps' },
+]
+
+const REGIONS = [
+  { value: 'azure_eastus',      label: 'Azure — East US' },
+  { value: 'azure_westeurope',  label: 'Azure — West Europe' },
+  { value: 'aws_us_east_1',     label: 'AWS — US East 1' },
+  { value: 'gcp_us_central1',   label: 'GCP — US Central 1' },
+]
 
 export default function PipelineInput({ onAnalyze, loading }: Props) {
-  const [config, setConfig] = useState(SAMPLE_PIPELINE)
-  const [type, setType] = useState('github_actions')
+  const [config, setConfig] = useState(SAMPLE)
+  const [type, setType]     = useState('github_actions')
   const [region, setRegion] = useState('azure_eastus')
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onAnalyze(config, type, region)
-  }
-
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <FileCode className="w-5 h-5 text-gray-600" />
-        <h2 className="text-lg font-semibold text-gray-900">Pipeline Configuration</h2>
+    <div className="animate-fade-in-up">
+      {/* Page header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-white">Pipeline Analysis</h1>
+        <p className="text-slate-400 text-sm mt-1">
+          Paste your CI/CD configuration to get carbon, cost, and risk insights.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pipeline Type
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: YAML editor */}
+        <div className="lg:col-span-2 bg-[#13151f] border border-white/5 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Pipeline YAML</span>
+            <button
+              onClick={() => setConfig(SAMPLE)}
+              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
             >
-              <option value="github_actions">GitHub Actions</option>
-              <option value="azure_devops">Azure DevOps</option>
-            </select>
+              <RotateCcw className="w-3 h-3" /> Reset sample
+            </button>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Region
-            </label>
-            <select
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="azure_eastus">Azure East US</option>
-              <option value="azure_westeurope">Azure West Europe</option>
-              <option value="aws_us_east_1">AWS US East 1</option>
-              <option value="gcp_us_central1">GCP US Central 1</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Pipeline YAML
-          </label>
           <textarea
             value={config}
-            onChange={(e) => setConfig(e.target.value)}
-            rows={12}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="Paste your pipeline configuration here..."
+            onChange={e => setConfig(e.target.value)}
+            rows={22}
+            spellCheck={false}
+            className="w-full bg-transparent px-4 py-4 font-mono text-sm text-slate-300 resize-none focus:outline-none leading-relaxed"
+            placeholder="Paste your pipeline YAML here..."
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-md font-medium hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
-        >
-          {loading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <Play className="w-5 h-5" />
-              Analyze Pipeline
-            </>
-          )}
-        </button>
-      </form>
+        {/* Right: Options + Run */}
+        <div className="flex flex-col gap-4">
+          {/* Pipeline type */}
+          <div className="bg-[#13151f] border border-white/5 rounded-xl p-4">
+            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+              Pipeline Type
+            </label>
+            <div className="relative">
+              <select
+                value={type}
+                onChange={e => setType(e.target.value)}
+                className="w-full appearance-none bg-[#0f1117] border border-white/10 text-slate-200 text-sm rounded-lg px-3 py-2.5 pr-8 focus:outline-none focus:border-emerald-500/50 transition-colors"
+              >
+                {PIPELINE_TYPES.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-3 w-4 h-4 text-slate-500 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Region */}
+          <div className="bg-[#13151f] border border-white/5 rounded-xl p-4">
+            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+              Cloud Region
+            </label>
+            <div className="relative">
+              <select
+                value={region}
+                onChange={e => setRegion(e.target.value)}
+                className="w-full appearance-none bg-[#0f1117] border border-white/10 text-slate-200 text-sm rounded-lg px-3 py-2.5 pr-8 focus:outline-none focus:border-emerald-500/50 transition-colors"
+              >
+                {REGIONS.map(r => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-3 w-4 h-4 text-slate-500 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* What gets analyzed */}
+          <div className="bg-[#13151f] border border-white/5 rounded-xl p-4">
+            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Analyzes</p>
+            <ul className="space-y-2">
+              {[
+                { dot: 'bg-emerald-500', label: 'Carbon footprint' },
+                { dot: 'bg-blue-500',    label: 'Cost estimation' },
+                { dot: 'bg-orange-500',  label: 'Risk scoring' },
+                { dot: 'bg-purple-500',  label: 'Policy enforcement' },
+              ].map(item => (
+                <li key={item.label} className="flex items-center gap-2 text-sm text-slate-400">
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Run button */}
+          <button
+            onClick={() => onAnalyze(config, type, region)}
+            disabled={loading || !config.trim()}
+            className="mt-auto flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium text-sm transition-all
+              bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500
+              disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-lg shadow-emerald-900/30"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Analyzing pipeline...
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Run Analysis
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

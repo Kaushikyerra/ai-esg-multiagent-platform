@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import logging
 import sys
 from pathlib import Path
@@ -77,7 +77,7 @@ async def analyze_pipeline(request: PipelineAnalysisRequest):
         
         pipeline_result = await pipeline_analyzer.analyze(context)
         if pipeline_result.get("status") != "success":
-            raise HTTPException(status_code=400, detail="Pipeline analysis failed")
+            raise HTTPException(status_code=400, detail=f"Pipeline analysis failed: {pipeline_result.get('error', 'unknown error')}")
         
         # Update context with pipeline analysis
         context.update(pipeline_result)

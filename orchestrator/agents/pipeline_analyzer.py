@@ -1,4 +1,4 @@
-from typing import Dict, Any
+﻿from typing import Dict, Any
 import yaml
 from .base_agent import BaseAgent
 
@@ -16,7 +16,11 @@ class PipelineAnalyzerAgent(BaseAgent):
         try:
             # Parse YAML config
             if isinstance(pipeline_config, str):
-                config = yaml.safe_load(pipeline_config)
+                # Sanitize GitHub Actions template expressions like ${{ matrix.node }}
+                # which are not valid YAML and cause parse errors
+                import re
+                sanitized = re.sub(r'\$\{\{[^}]*\}\}', '__TEMPLATE__', pipeline_config)
+                config = yaml.safe_load(sanitized)
             else:
                 config = pipeline_config
             
