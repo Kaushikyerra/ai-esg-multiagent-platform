@@ -83,7 +83,11 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       secrets: [
         {
           name: 'openai-key'
-          value: ''
+          value: 'placeholder' // Will be updated by CLI in the workflow
+        }
+        {
+          name: 'acr-password'
+          value: acr.listCredentials().passwords[0].value
         }
       ]
       registries: [
@@ -238,38 +242,7 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
 
 // Alert Rule for High Error Rate
 // Alert Rule for High Error Rate (Simplified)
-resource errorRateAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
-  name: '${appName}-high-error-rate'
-  location: 'global'
-  properties: {
-    description: 'Alert when error rate is high'
-    severity: 2
-    enabled: true
-    scopes: [
-      appInsights.id
-    ]
-    evaluationFrequency: 'PT1M'
-    windowSize: 'PT5M'
-    criteria: {
-      'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
-      allOf: [
-        {
-          name: 'Server Response Time'
-          metricName: 'server/responseTime'
-          operator: 'GreaterThan'
-          threshold: 2000
-          timeAggregation: 'Average'
-          criterionType: 'StaticThresholdCriterion'
-        }
-      ]
-    }
-    actions: [
-      {
-        actionGroupId: actionGroup.id
-      }
-    ]
-  }
-}
+// Simplified monitoring for initial deployment
 
 // Alert Rule for High CPU
 resource cpuAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
