@@ -15,7 +15,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-    
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v4
       
@@ -38,14 +40,14 @@ jobs:
             --parameters appName=${{ env.APP_NAME }} location=${{ env.LOCATION }}
       
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       
       - name: Login to ACR
         run: |
           az acr login --name ${{ env.ACR_NAME }}
       
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
