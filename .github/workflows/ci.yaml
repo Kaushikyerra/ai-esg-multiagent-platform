@@ -24,6 +24,22 @@ jobs:
 
       - name: Run agent tests
         run: python tests/test_agents.py
+        env:
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        timeout-minutes: 5
+
+      - name: Run downtime agent unit tests
+        run: python tests/test_downtime_agent.py
+        env:
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+        timeout-minutes: 3
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -60,7 +76,12 @@ jobs:
 
       - name: Smoke test Docker image
         run: |
-          docker run -d -p 8000:8000 --name test-container greenops-ai:${{ github.sha }}
-          sleep 5
+          docker run -d -p 8000:8000 --name test-container \
+            -e AZURE_OPENAI_API_KEY=dummy \
+            -e AZURE_OPENAI_ENDPOINT=https://dummy.cognitiveservices.azure.com/ \
+            -e AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o \
+            -e AZURE_OPENAI_API_VERSION=2025-01-01-preview \
+            greenops-ai:${{ github.sha }}
+          sleep 8
           curl -f http://localhost:8000/health || exit 1
           docker stop test-container
