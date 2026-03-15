@@ -2,7 +2,8 @@
 
 param location string = resourceGroup().location
 param appName string = 'greenops-ai'
-param environment string = 'production'
+@secure()
+param openAiKey string
 param minReplicas int = 2
 param maxReplicas int = 5
 
@@ -83,7 +84,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       secrets: [
         {
           name: 'openai-key'
-          value: 'placeholder' // Will be updated by CLI in the workflow
+          value: openAiKey
         }
         {
           name: 'acr-password'
@@ -92,7 +93,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       ]
       registries: [
         {
-          server: '${acr.properties.loginServer}'
+          server: acr.properties.loginServer
           username: acr.listCredentials().username
           passwordSecretRef: 'acr-password'
         }
