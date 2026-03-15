@@ -26,7 +26,7 @@ Focus on practical, actionable recommendations to reduce deployment risk."""
             base_result = await self._fallback_analysis(context)
             
             # Enhance with AI
-            if self.agent:
+            if self.ai_available:
                 prompt = self._build_prompt(context, base_result)
                 ai_insights = await self.invoke_agent(prompt)
                 base_result["ai_mitigation_plan"] = ai_insights

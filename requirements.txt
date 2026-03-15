@@ -6,7 +6,6 @@ pyyaml==6.0.2
 requests==2.32.3
 httpx==0.28.0
 
-# Microsoft Agent Framework (Official for AI Dev Days Hackathon)
-agent-framework
-azure-ai-openai
+# Azure OpenAI - Microsoft Agent Framework (AI Dev Days Hackathon)
+openai>=1.50.0
 azure-identity==1.19.0
