@@ -40,6 +40,13 @@ export interface AnalysisResult {
     }>
     recommendations: string[]
   }
+  downtime_analysis: {
+    status: string
+    downtime_probability: number
+    downtime_risk_score: number
+    preventative_measures: string[]
+    cost_implications?: string[]
+  }
   policy_decision: {
     status: string
     decision: string

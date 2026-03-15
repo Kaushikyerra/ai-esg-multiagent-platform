@@ -7,6 +7,7 @@ import PolicyCard from '../components/PolicyCard'
 import RecommendationsCard from '../components/RecommendationsCard'
 import PipelineStats from '../components/PipelineStats'
 import ChartsSection from '../components/ChartsSection'
+import DowntimeCard from '../components/DowntimeCard'
 
 interface Props {
   result: AnalysisResult
@@ -77,6 +78,11 @@ export default function DashboardPage({ result, onNewAnalysis, onDownloadReport 
           riskRecommendations={risk_analysis.recommendations}
         />
       </div>
+
+      {/* Downtime analysis */}
+      {result.downtime_analysis && (
+        <DowntimeCard data={result.downtime_analysis} />
+      )}
 
       {/* Charts & Analytics */}
       <ChartsSection result={result} />

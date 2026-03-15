@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
 import { Play, RotateCcw, Upload, FileText, X, ChevronDown } from 'lucide-react'
-import { extractTextFromPDF } from '../utils/pdfExtractor'
 
 interface Props {
   onAnalyze: (config: string, type: string, region: string) => void
@@ -74,6 +73,7 @@ export default function AnalyzePage({ onAnalyze, loading, error, onClearError }:
     setPdfFile(file)
     setPdfLoading(true)
     try {
+      const { extractTextFromPDF } = await import('../utils/pdfExtractor')
       const text = await extractTextFromPDF(file)
       setConfig(text)
       setInputMode('yaml')
@@ -268,6 +268,7 @@ export default function AnalyzePage({ onAnalyze, loading, error, onClearError }:
                 { dot: 'bg-blue-500',    label: 'Cost estimation' },
                 { dot: 'bg-orange-500',  label: 'Risk scoring' },
                 { dot: 'bg-purple-500',  label: 'Policy enforcement' },
+                { dot: 'bg-red-400',     label: 'Downtime prediction' },
               ].map(item => (
                 <li key={item.label} className="flex items-center gap-2.5 text-sm text-slate-600">
                   <span className={`w-2 h-2 rounded-full ${item.dot} flex-shrink-0`} />

@@ -61,6 +61,7 @@ function exportJSON(result: AnalysisResult) {
 }
 
 function exportCSV(result: AnalysisResult) {
+  const d = result.downtime_analysis
   const rows = [
     ['Metric', 'Value'],
     ['Decision', result.summary.decision],
@@ -75,6 +76,10 @@ function exportCSV(result: AnalysisResult) {
     ['Jobs', result.pipeline_analysis.jobs_count],
     ['Steps', result.pipeline_analysis.steps_count],
     ['Duration (min)', result.pipeline_analysis.estimated_duration_minutes],
+    ...(d ? [
+      ['Downtime Probability (%)', d.downtime_probability],
+      ['Downtime Risk Score', d.downtime_risk_score],
+    ] : []),
   ]
   const csv = rows.map(r => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
